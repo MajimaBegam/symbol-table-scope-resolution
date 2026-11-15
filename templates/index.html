@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symbol Table Management & Scope Resolution System</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo-area">
+            <div class="logo-icon">{ }</div>
+            <div>
+                <h1>Symbol Table & Scope Resolution</h1>
+                <p class="subtitle">Interactive Compiler Design & Semantic Analysis Simulator</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <span class="badge backend-badge">Backend: Python 3</span>
+            <span class="badge frontend-badge">Frontend: HTML • CSS • JS</span>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Control Toolbar -->
+        <div class="toolbar card">
+            <div class="toolbar-group">
+                <label for="languageSelect">Language Mode:</label>
+                <select id="languageSelect" class="form-select">
+                    <option value="python" selected>Python</option>
+                    <option value="c">C / Java Style</option>
+                </select>
+            </div>
+
+            <div class="toolbar-group">
+                <label for="sampleSelect">Load Example:</label>
+                <select id="sampleSelect" class="form-select">
+                    <option value="">-- Choose a Sample Program --</option>
+                    <option value="python_basic">1. Basic Scopes & Resolution (Python)</option>
+                    <option value="python_shadowing">2. Shadowing & Undeclared Error (Python)</option>
+                    <option value="c_nested_scopes">3. C-Style Nested Functions & Scopes</option>
+                </select>
+            </div>
+
+            <div class="toolbar-actions">
+                <button id="analyzeBtn" class="btn btn-primary">
+                    <span class="btn-icon">▶</span> Analyze Code
+                </button>
+                <button id="clearBtn" class="btn btn-secondary">Clear</button>
+            </div>
+        </div>
+
+        <!-- Dashboard Layout -->
+        <div class="dashboard-grid">
+            <!-- Left Panel: Code Input -->
+            <section class="code-panel card">
+                <div class="panel-header">
+                    <h3>Source Code</h3>
+                    <span class="code-hint">Type or paste your code below</span>
+                </div>
+                <div class="editor-container">
+                    <textarea id="codeEditor" spellcheck="false" placeholder="# Write your code here...&#10;x = 10&#10;def foo():&#10;    y = x + 5&#10;    print(y)"></textarea>
+                </div>
+            </section>
+
+            <!-- Right Panel: Output & Visualizations -->
+            <section class="results-panel card">
+                <!-- Metrics Bar -->
+                <div class="stats-bar">
+                    <div class="stat-card">
+                        <span class="stat-num" id="statScopes">0</span>
+                        <span class="stat-label">Scopes</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-num" id="statSymbols">0</span>
+                        <span class="stat-label">Symbols</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-num" id="statLookups">0</span>
+                        <span class="stat-label">Lookups</span>
+                    </div>
+                    <div class="stat-card" id="errorCard">
+                        <span class="stat-num text-danger" id="statErrors">0</span>
+                        <span class="stat-label">Errors</span>
+                    </div>
+                    <div class="stat-card" id="warningCard">
+                        <span class="stat-num text-warning" id="statWarnings">0</span>
+                        <span class="stat-label">Warnings</span>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs-nav">
+                    <button class="tab-btn active" data-tab="symbolsTab">📋 Symbol Table</button>
+                    <button class="tab-btn" data-tab="resolutionTab">🔍 Scope Resolution Trace</button>
+                    <button class="tab-btn" data-tab="treeTab">🌳 Scope Tree</button>
+                    <button class="tab-btn" data-tab="diagnosticsTab">⚠️ Diagnostics (<span id="diagBadge">0</span>)</button>
+                </div>
+
+                <!-- Tab Content: Symbol Table -->
+                <div id="symbolsTab" class="tab-content active">
+                    <div class="table-actions">
+                        <input type="text" id="symbolFilter" placeholder="Search symbol name..." class="search-input">
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="symbolsTable">
+                            <thead>
+                                <tr>
+                                    <th>Identifier</th>
+                                    <th>Data Type</th>
+                                    <th>Scope</th>
+                                    <th>Line</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="5" class="empty-state">No code analyzed yet. Click "Analyze Code" above.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Resolution Trace -->
+                <div id="resolutionTab" class="tab-content">
+                    <p class="tab-desc">Step-by-step trace of how the compiler resolves each variable lookup across nested scopes.</p>
+                    <div class="table-responsive">
+                        <table class="data-table" id="lookupsTable">
+                            <thead>
+                                <tr>
+                                    <th>Line</th>
+                                    <th>Variable</th>
+                                    <th>Status</th>
+                                    <th>Resolved Scope</th>
+                                    <th>Declared Line</th>
+                                    <th>Resolution Path</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="6" class="empty-state">No lookups recorded.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Scope Hierarchy Tree -->
+                <div id="treeTab" class="tab-content">
+                    <p class="tab-desc">Visual nested hierarchy of program lexical scopes:</p>
+                    <div id="scopeTreeDisplay" class="tree-container">
+                        <p class="empty-state">Run analysis to view the scope tree.</p>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Diagnostics -->
+                <div id="diagnosticsTab" class="tab-content">
+                    <div id="diagnosticsList" class="diagnostics-container">
+                        <p class="empty-state">No errors or warnings detected.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>Symbol Table Management & Scope Resolution System • Mini Project</p>
+    </footer>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
+
