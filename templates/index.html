@@ -151,9 +151,19 @@
 
                 <!-- Tab Content: Scope Hierarchy Tree -->
                 <div id="treeTab" class="tab-content">
-                    <p class="tab-desc">Visual nested hierarchy of program lexical scopes:</p>
+                    <div class="tree-toolbar">
+                        <p class="tab-desc">Visual nested hierarchy of program lexical scopes:</p>
+                        <div class="tree-actions">
+                            <label class="tree-toggle-label">
+                                <input type="checkbox" id="toggleBuiltinsCheckbox"> Include Built-in Functions
+                            </label>
+                            <button id="copyTreeBtn" class="btn btn-secondary btn-sm" title="Copy ASCII Tree to Clipboard">
+                                📋 Copy Tree
+                            </button>
+                        </div>
+                    </div>
                     <div id="scopeTreeDisplay" class="tree-container">
-                        <p class="empty-state">Run analysis to view the scope tree.</p>
+                        <pre id="treeAsciiContent" class="tree-ascii"><span class="empty-state">Run analysis to view the scope tree.</span></pre>
                     </div>
                 </div>
 

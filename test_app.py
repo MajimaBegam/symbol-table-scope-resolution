@@ -51,8 +51,11 @@ def run_tests():
     assert res_c.status_code == 200
     data_c = res_c.get_json()
     assert data_c["success"] is True
+    assert data_c["stats"]["error_count"] == 1, f"Expected exactly 1 undeclared error for missingVar, got {data_c['stats']['error_count']}"
+    assert data_c["errors"][0]["symbol"] == "missingVar"
     print(f" [PASS] Test 5: C/Java-style Code Analysis")
     print(f"        - Scopes: {data_c['stats']['total_scopes']}, Symbols: {data_c['stats']['total_symbols']}, Errors: {data_c['stats']['error_count']}")
+    print(f"        - Correctly caught undeclared variable: {data_c['errors'][0]['symbol']}")
 
     print("="*50 + "\n ALL 5 VERIFICATION TESTS PASSED SUCCESSFULLY! ")
 

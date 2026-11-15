@@ -22,11 +22,46 @@ document.addEventListener("DOMContentLoaded", () => {
     // Display Containers
     const symbolsTableBody = document.querySelector("#symbolsTable tbody");
     const lookupsTableBody = document.querySelector("#lookupsTable tbody");
-    const scopeTreeDisplay = document.getElementById("scopeTreeDisplay");
+    const treeAsciiContent = document.getElementById("treeAsciiContent");
     const diagnosticsList = document.getElementById("diagnosticsList");
+    const toggleBuiltinsCheckbox = document.getElementById("toggleBuiltinsCheckbox");
+    const copyTreeBtn = document.getElementById("copyTreeBtn");
 
     let currentSymbols = [];
     let samplesCache = {};
+    let currentRootNode = null;
+    let currentPlainAsciiTree = "";
+
+    // Toggle Builtins Checkbox
+    if (toggleBuiltinsCheckbox) {
+        toggleBuiltinsCheckbox.addEventListener("change", () => {
+            if (currentRootNode) {
+                renderScopeTree(currentRootNode);
+            }
+        });
+    }
+
+    // Copy ASCII Tree to Clipboard
+    if (copyTreeBtn) {
+        copyTreeBtn.addEventListener("click", () => {
+            if (!currentPlainAsciiTree.trim()) {
+                return;
+            }
+            navigator.clipboard.writeText(currentPlainAsciiTree).then(() => {
+                const originalText = copyTreeBtn.innerHTML;
+                copyTreeBtn.innerHTML = `✓ Copied!`;
+                copyTreeBtn.classList.add("btn-primary");
+                copyTreeBtn.classList.remove("btn-secondary");
+                setTimeout(() => {
+                    copyTreeBtn.innerHTML = originalText;
+                    copyTreeBtn.classList.add("btn-secondary");
+                    copyTreeBtn.classList.remove("btn-primary");
+                }, 1800);
+            }).catch(err => {
+                console.error("Copy failed", err);
+            });
+        });
+    }
 
     // 1. Tab Navigation
     const tabButtons = document.querySelectorAll(".tab-btn");
@@ -97,9 +132,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         symbolsTableBody.innerHTML = `<tr><td colspan="5" class="empty-state">No code analyzed yet.</td></tr>`;
         lookupsTableBody.innerHTML = `<tr><td colspan="6" class="empty-state">No lookups recorded.</td></tr>`;
-        scopeTreeDisplay.innerHTML = `<p class="empty-state">Run analysis to view the scope tree.</p>`;
+        if (treeAsciiContent) {
+            treeAsciiContent.innerHTML = `<span class="empty-state">Run analysis to view the scope tree.</span>`;
+        }
         diagnosticsList.innerHTML = `<p class="empty-state">No errors or warnings.</p>`;
         currentSymbols = [];
+        currentRootNode = null;
+        currentPlainAsciiTree = "";
     }
 
     async function runAnalysis() {
@@ -192,30 +231,74 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderScopeTree(rootNode) {
-        if (!rootNode) {
-            scopeTreeDisplay.innerHTML = `<p class="empty-state">No scope tree available.</p>`;
+        currentRootNode = rootNode;
+        if (!rootNode || !treeAsciiContent) {
+            if (treeAsciiContent) {
+                treeAsciiContent.innerHTML = `<span class="empty-state">No scope tree available.</span>`;
+            }
+            currentPlainAsciiTree = "";
             return;
         }
 
-        function buildNodeHTML(node) {
-            const symNames = node.symbols.map(s => `${s.name} (${s.type})`).join(", ");
-            const symbolsInfo = symNames ? `<div class="tree-node-symbols">Identifiers: ${escapeHtml(symNames)}</div>` : "";
+        const showBuiltins = toggleBuiltinsCheckbox ? toggleBuiltinsCheckbox.checked : false;
 
-            let childrenHTML = "";
-            if (node.children && node.children.length > 0) {
-                childrenHTML = node.children.map(c => buildNodeHTML(c)).join("");
+        function buildAscii(node, prefix = "", isLast = true, isRoot = true) {
+            let html = "";
+            let plain = "";
+
+            if (isRoot) {
+                html += `<span class="tree-scope">📁 ${escapeHtml(node.name)}</span>\n`;
+                plain += `${node.name}\n`;
+            } else {
+                const branchChar = isLast ? "└── " : "├── ";
+                html += `<span class="tree-branch">${prefix}${branchChar}</span><span class="tree-scope">📁 ${escapeHtml(node.name)}</span>\n`;
+                plain += `${prefix}${branchChar}${node.name}\n`;
             }
 
-            return `
-                <div class="tree-node">
-                    <span class="tree-node-title">📁 ${escapeHtml(node.name)}</span>
-                    ${symbolsInfo}
-                    ${childrenHTML}
-                </div>
-            `;
+            const childPrefix = isRoot ? "" : prefix + (isLast ? "    " : "│   ");
+
+            // Filter out builtin functions unless user checked "Include Built-in Functions"
+            const symbols = (node.symbols || []).filter(s => showBuiltins || s.type !== "builtin_func");
+            const children = node.children || [];
+
+            const hasSymbols = symbols.length > 0;
+            const hasChildren = children.length > 0;
+
+            if (hasSymbols || hasChildren) {
+                // Leading spacer line (vertical branch)
+                html += `<span class="tree-branch">${childPrefix}│</span>\n`;
+                plain += `${childPrefix}│\n`;
+
+                // Render symbols in this scope
+                symbols.forEach((sym, idx) => {
+                    const isLastSym = (idx === symbols.length - 1) && !hasChildren;
+                    const branchChar = isLastSym ? "└── " : "├── ";
+
+                    html += `<span class="tree-branch">${childPrefix}${branchChar}</span><span class="tree-ident">${escapeHtml(sym.name)}</span> <span class="tree-type">(${escapeHtml(sym.type)})</span>\n`;
+                    plain += `${childPrefix}${branchChar}${sym.name}\n`;
+                });
+
+                // Vertical separator between symbols and child scopes
+                if (hasSymbols && hasChildren) {
+                    html += `<span class="tree-branch">${childPrefix}│</span>\n`;
+                    plain += `${childPrefix}│\n`;
+                }
+
+                // Render child scopes recursively
+                children.forEach((child, idx) => {
+                    const isLastChild = idx === children.length - 1;
+                    const sub = buildAscii(child, childPrefix, isLastChild, false);
+                    html += sub.html;
+                    plain += sub.plain;
+                });
+            }
+
+            return { html, plain };
         }
 
-        scopeTreeDisplay.innerHTML = buildNodeHTML(rootNode);
+        const treeOutput = buildAscii(rootNode);
+        treeAsciiContent.innerHTML = treeOutput.html;
+        currentPlainAsciiTree = treeOutput.plain;
     }
 
     function renderDiagnostics(errors, warnings) {

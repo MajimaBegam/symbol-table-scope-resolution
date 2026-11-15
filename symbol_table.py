@@ -248,8 +248,9 @@ def analyze_c_like_code(code_str):
                  "if", "else", "while", "for", "return", "true", "false", "NULL", "print", "printf"}
 
     for line_num, raw_line in enumerate(lines, start=1):
-        line = raw_line.strip()
-        if not line or line.startswith("//"):
+        # Strip inline comments (e.g. // ...)
+        line = raw_line.split("//")[0].strip()
+        if not line:
             continue
 
         # Check for block closing '}'

@@ -32,9 +32,10 @@ An interactive web-based simulator and visualizer for **Compiler Design / Semant
 ## 📁 Project Structure
 
 ```
-majima_manda/
+Table_Management_Project/
 ├── app.py                 # Flask web server & REST API
 ├── symbol_table.py        # Core symbol table & scope resolution engine
+├── test_app.py            # Automated test suite (5 verification tests)
 ├── requirements.txt       # Dependencies (Flask, gunicorn)
 ├── Procfile               # Cloud deployment configuration
 ├── templates/
@@ -51,15 +52,20 @@ majima_manda/
 
 1. Open your terminal in this directory:
    ```bash
-   cd d:\majima_manda
+   cd Table_Management_Project
    ```
 
-2. Run the Python application:
+2. (Optional) Run the automated test suite:
+   ```bash
+   python test_app.py
+   ```
+
+3. Run the Python web application:
    ```bash
    python app.py
    ```
 
-3. Open your browser and go to:
+4. Open your browser and go to:
    ```
    http://localhost:5000
    ```
