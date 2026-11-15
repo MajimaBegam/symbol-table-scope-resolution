@@ -1,5 +1,11 @@
 # Symbol Table Management and Scope Resolution System
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-brightgreen?style=for-the-badge&logo=render)](https://symbol-table-scope-resolution.onrender.com)
+[![Python](https://img.shields.io/badge/Python-3.x-blue?style=for-the-badge&logo=python)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-Web%20Framework-black?style=for-the-badge&logo=flask)](https://flask.palletsprojects.com/)
+
+> 🌐 **Live Public Web Application:** **[https://symbol-table-scope-resolution.onrender.com](https://symbol-table-scope-resolution.onrender.com)**
+
 An interactive web-based simulator and visualizer for **Compiler Design / Semantic Analysis**, built with **Python (Flask)** on the backend and **HTML, CSS, and JavaScript** on the frontend.
 
 ---
@@ -93,8 +99,8 @@ You can easily host this project for free and get a public URL (`https://...`) t
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `gunicorn app:app`
 6. Click **Deploy Web Service**.
-7. In ~2 minutes, Render gives you a live public link like:
-   `https://symbol-table-management.onrender.com`
+7. In ~2 minutes, Render gives you a live public link:
+   👉 **[https://symbol-table-scope-resolution.onrender.com](https://symbol-table-scope-resolution.onrender.com)**
 
 ---
 
